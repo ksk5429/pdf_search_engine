@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+*.pdf
+*.log
+download_log.json
+known_papers.json
+conversion_log.json
+downloads/
+markdown/
+.DS_Store
+Thumbs.db
