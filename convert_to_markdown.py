@@ -36,13 +36,14 @@ MIN_WORD_COUNT = 100            # minimum words
 MAX_GARBLED_RATIO = 0.15        # max ratio of non-ASCII chars (excluding CJK)
 MIN_PARAGRAPH_COUNT = 3         # minimum number of paragraphs
 
+# Set up logging (file handler only if directory exists)
+_handlers = [logging.StreamHandler()]
+if PDF_DIR.exists():
+    _handlers.append(logging.FileHandler(PDF_DIR / "conversion.log", encoding="utf-8"))
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler(PDF_DIR / "conversion.log", encoding="utf-8"),
-    ],
+    handlers=_handlers,
 )
 log = logging.getLogger(__name__)
 

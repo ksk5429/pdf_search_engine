@@ -623,7 +623,9 @@ def run_pipeline(topics=None, test_mode=False):
 
 # ── CLI ────────────────────────────────────────────────────────────────────
 
-if __name__ == "__main__":
+def main():
+    global MIN_YEAR, MAX_RESULTS_PER_QUERY, SKIP_S2, DOWNLOAD_DIR, LIT_REVIEW_DIR, LOG_FILE, DEDUP_FILE
+
     parser = argparse.ArgumentParser(description="Academic PDF Search & Download Engine")
     parser.add_argument("--test", action="store_true", help="Test mode (2 topics, 5 results)")
     parser.add_argument("--topic", type=str, help="Search a single topic by name")
@@ -636,7 +638,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Apply CLI overrides
-    global MIN_YEAR, MAX_RESULTS_PER_QUERY, SKIP_S2, DOWNLOAD_DIR, LIT_REVIEW_DIR, LOG_FILE, DEDUP_FILE
     MIN_YEAR = args.min_year
     MAX_RESULTS_PER_QUERY = args.max_results
     SKIP_S2 = args.no_s2
@@ -663,11 +664,9 @@ if __name__ == "__main__":
     )
 
     if args.query:
-        # Custom single query
         topics = [{"name": "custom", "queries": [args.query]}]
         run_pipeline(topics=topics)
     elif args.topic:
-        # Single topic
         matching = [t for t in RESEARCH_TOPICS if args.topic.lower() in t["name"].lower()]
         if matching:
             run_pipeline(topics=matching)
@@ -676,3 +675,7 @@ if __name__ == "__main__":
             log.info(f"Available: {[t['name'] for t in RESEARCH_TOPICS]}")
     else:
         run_pipeline(test_mode=args.test)
+
+
+if __name__ == "__main__":
+    main()
