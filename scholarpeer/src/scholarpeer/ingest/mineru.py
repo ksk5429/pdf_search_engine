@@ -42,17 +42,23 @@ class MinerUParser:
 
     @staticmethod
     def _detect_backend() -> str:
+        # MinerU requires both the Python package AND the ``magic-pdf`` CLI to be
+        # on PATH. On Windows venvs the CLI lives in ``.venv/Scripts`` which may
+        # not be on the caller's PATH, so fall back when either is missing.
+        from shutil import which
+
         try:
             import magic_pdf  # noqa: F401
-
-            return "mineru"
+            if which("magic-pdf"):
+                return "mineru"
         except ImportError:
-            try:
-                import pymupdf4llm  # noqa: F401
+            pass
+        try:
+            import pymupdf4llm  # noqa: F401
 
-                return "pymupdf4llm"
-            except ImportError:
-                return "none"
+            return "pymupdf4llm"
+        except ImportError:
+            return "none"
 
     def parse(self, pdf_path: Path) -> MinerUResult:
         if self._backend == "mineru":

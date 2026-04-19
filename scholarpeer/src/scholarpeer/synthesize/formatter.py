@@ -6,9 +6,8 @@ prose-polishes the specialists' grounded comments.
 
 from __future__ import annotations
 
-from anthropic import Anthropic
-
 from scholarpeer.config import get_settings
+from scholarpeer.llm import LLMBackend, get_backend
 from scholarpeer.logging import get_logger
 from scholarpeer.schemas.review import Review
 
@@ -30,20 +29,24 @@ Do NOT change the substance of any comment. Output a single Markdown document wi
 
 
 class ReviewFormatter:
-    def __init__(self, model: str | None = None, max_tokens: int = 4096) -> None:
+    def __init__(
+        self,
+        model: str | None = None,
+        max_tokens: int = 4096,
+        backend: LLMBackend | None = None,
+    ) -> None:
         settings = get_settings()
         self._model = model or settings.formatter_model
         self._max_tokens = max_tokens
-        self._client = Anthropic(api_key=settings.anthropic_api_key.get_secret_value())
+        self._backend = backend or get_backend()
 
     def format_markdown(self, review: Review) -> str:
         payload = review.model_dump_json(indent=2)
-        resp = self._client.messages.create(
+        md = self._backend.complete(
+            system=_SYSTEM,
+            user=payload,
             model=self._model,
             max_tokens=self._max_tokens,
-            system=_SYSTEM,
-            messages=[{"role": "user", "content": payload}],
-        )
-        md = "".join(b.text for b in resp.content if b.type == "text").strip()
+        ).strip()
         log.info("formatter.done", chars=len(md))
         return md

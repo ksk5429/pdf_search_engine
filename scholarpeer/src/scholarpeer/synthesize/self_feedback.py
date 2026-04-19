@@ -13,9 +13,8 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 
-from anthropic import Anthropic
-
 from scholarpeer.config import get_settings
+from scholarpeer.llm import LLMBackend, get_backend
 from scholarpeer.logging import get_logger
 from scholarpeer.retrieve.hybrid import HybridRetriever
 from scholarpeer.schemas.retrieval import RetrievalLog, RetrievalQuery
@@ -44,12 +43,13 @@ class SelfFeedbackLoop:
         retriever: HybridRetriever | None = None,
         critic_model: str | None = None,
         max_rounds: int | None = None,
+        backend: LLMBackend | None = None,
     ) -> None:
         settings = get_settings()
         self._retriever = retriever or HybridRetriever()
         self._critic = critic_model or settings.specialist_model
         self._rounds = max_rounds if max_rounds is not None else settings.self_feedback_rounds
-        self._client = Anthropic(api_key=settings.anthropic_api_key.get_secret_value())
+        self._backend = backend or get_backend()
 
     def refine(self, review: Review, retrieval_log: RetrievalLog) -> list[FeedbackRound]:
         """Run up to ``self._rounds`` feedback rounds. Mutates ``retrieval_log`` in place."""
@@ -80,13 +80,12 @@ class SelfFeedbackLoop:
                 for c in review.comments
             ],
         }
-        resp = self._client.messages.create(
+        raw = self._backend.complete(
+            system=_CRITIC_SYSTEM,
+            user=json.dumps(payload),
             model=self._critic,
             max_tokens=800,
-            system=_CRITIC_SYSTEM,
-            messages=[{"role": "user", "content": json.dumps(payload)}],
         )
-        raw = "".join(b.text for b in resp.content if b.type == "text")
         try:
             start = raw.index("[")
             end = raw.rindex("]") + 1

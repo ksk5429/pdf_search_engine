@@ -152,9 +152,22 @@ class Settings(BaseSettings):
         return _REPO_ROOT / "data" / "corpus"
 
     def assert_api_keys(self) -> None:
-        """Raise if secrets required at runtime are missing."""
-        if not self.anthropic_api_key.get_secret_value():
-            raise RuntimeError("ANTHROPIC_API_KEY not set (export or .env).")
+        """Raise if secrets required at runtime are missing.
+
+        When the Claude Code backend is selected (``SP_LLM_BACKEND=claude_code``,
+        the default), ``ANTHROPIC_API_KEY`` is not required — auth flows through
+        the local ``claude`` CLI.
+        """
+        import os
+
+        backend = os.environ.get("SP_LLM_BACKEND", "claude_code").lower()
+        if backend == "anthropic":
+            key = self.anthropic_api_key.get_secret_value()
+            if not key or key.endswith("REPLACE_ME"):
+                raise RuntimeError(
+                    "ANTHROPIC_API_KEY not set. Add a real key to scholarpeer/.env "
+                    "or switch to SP_LLM_BACKEND=claude_code."
+                )
         if not self.polite_email:
             raise RuntimeError("POLITE_EMAIL not set (export or .env).")
 

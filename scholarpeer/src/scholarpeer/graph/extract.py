@@ -10,9 +10,8 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 
-from anthropic import Anthropic
-
 from scholarpeer.config import get_settings
+from scholarpeer.llm import LLMBackend, get_backend
 from scholarpeer.logging import get_logger
 from scholarpeer.schemas.retrieval import Chunk
 
@@ -36,20 +35,24 @@ class GraphTriple:
 
 
 class EntityRelationExtractor:
-    def __init__(self, model: str | None = None, max_tokens: int = 1024) -> None:
+    def __init__(
+        self,
+        model: str | None = None,
+        max_tokens: int = 1024,
+        backend: LLMBackend | None = None,
+    ) -> None:
         settings = get_settings()
         self._model = model or settings.formatter_model  # Haiku is plenty
         self._max_tokens = max_tokens
-        self._client = Anthropic(api_key=settings.anthropic_api_key.get_secret_value())
+        self._backend = backend or get_backend()
 
     def extract(self, chunk: Chunk) -> list[GraphTriple]:
-        resp = self._client.messages.create(
+        raw = self._backend.complete(
+            system=_SYSTEM,
+            user=chunk.text[:3000],
             model=self._model,
             max_tokens=self._max_tokens,
-            system=_SYSTEM,
-            messages=[{"role": "user", "content": chunk.text[:3000]}],
         )
-        raw = "".join(b.text for b in resp.content if b.type == "text")
         try:
             start = raw.index("[")
             end = raw.rindex("]") + 1

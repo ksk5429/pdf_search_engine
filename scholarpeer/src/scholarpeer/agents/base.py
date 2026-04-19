@@ -14,9 +14,8 @@ import abc
 import json
 from dataclasses import dataclass
 
-from anthropic import Anthropic
-
 from scholarpeer.config import get_settings
+from scholarpeer.llm import LLMBackend, get_backend
 from scholarpeer.logging import get_logger
 from scholarpeer.schemas.paper import Paper
 from scholarpeer.schemas.retrieval import RetrievalLog
@@ -37,11 +36,16 @@ class BaseSpecialist(abc.ABC):
 
     role: SpecialistRole
 
-    def __init__(self, model: str | None = None, max_tokens: int = 2048) -> None:
+    def __init__(
+        self,
+        model: str | None = None,
+        max_tokens: int = 2048,
+        backend: LLMBackend | None = None,
+    ) -> None:
         settings = get_settings()
         self._model = model or settings.specialist_model
         self._max_tokens = max_tokens
-        self._client = Anthropic(api_key=settings.anthropic_api_key.get_secret_value())
+        self._backend = backend or get_backend()
 
     @abc.abstractmethod
     def system_prompt(self) -> str:
@@ -53,14 +57,12 @@ class BaseSpecialist(abc.ABC):
 
     def review(self, inp: SpecialistInput) -> list[ReviewerComment]:
         log.info("specialist.review", role=self.role.value, paper=inp.target.paper_id)
-
-        resp = self._client.messages.create(
+        raw = self._backend.complete(
+            system=self.system_prompt(),
+            user=self.user_prompt(inp),
             model=self._model,
             max_tokens=self._max_tokens,
-            system=self.system_prompt(),
-            messages=[{"role": "user", "content": self.user_prompt(inp)}],
         )
-        raw = "".join(block.text for block in resp.content if block.type == "text")
         return self._parse(raw)
 
     def _parse(self, raw: str) -> list[ReviewerComment]:
