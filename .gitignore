@@ -13,3 +13,18 @@ downloads/
 markdown/
 .DS_Store
 Thumbs.db
+desktop.ini
+.claude/
+
+# scholarpeer (built artifacts and caches)
+scholarpeer/.venv/
+scholarpeer/data/
+scholarpeer/.pytest_cache/
+scholarpeer/.ruff_cache/
+scholarpeer/.mypy_cache/
+scholarpeer/install_*.log
+scholarpeer/index_full.log
+scholarpeer/ingest_full.log
+scholarpeer/.env
+scholarpeer/**/__pycache__/
+scholarpeer/src/scholarpeer.egg-info/

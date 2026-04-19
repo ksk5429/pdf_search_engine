@@ -1,4 +1,25 @@
-# PDF Search Engine
+# PDF Search Engine + ScholarPeer
+
+This repository ships two complementary tools:
+
+1. **`pdf_search_engine.py` + `convert_to_markdown.py`** — multi-source academic PDF discovery + Markdown conversion (the original tool, see below).
+2. **[`scholarpeer/`](scholarpeer/)** — a citation-grounded multi-agent AI co-reviewer built on top of the corpus you collect with the discovery tool. Implements the [blueprint for an AI co-reviewer](A%20blueprint%20for%20an%20AI%20co-reviewer.md): GROBID + MinerU ingest, Qdrant hybrid retrieval, MARG-style specialist agents (novelty / methodology / clarity / reproducibility / related-work), OpenScholar-style self-feedback, Haiku formatting, hard citation grounding.
+
+```
+PDFs (pdf_search_engine.py)
+    v
+Markdown corpus (convert_to_markdown.py)
+    v
+ScholarPeer ingest -> Qdrant index -> Claude Agent SDK review
+                                          [SP:abc] / [OA:W...] / [S2:...]
+```
+
+Validated end-to-end on April 19, 2026: 1,947 papers ingested, 135,754 chunks indexed in
+local Qdrant, hybrid dense (BGE-M3) + BM25 retrieval working. See [`scholarpeer/README.md`](scholarpeer/README.md) for setup and `scholarpeer/CHANGELOG.md` for feature list.
+
+---
+
+## Original tool: PDF Search Engine
 
 Multi-source academic PDF search and download engine with PDF-to-Markdown conversion. Discovers open-access papers from OpenAlex, Semantic Scholar, CrossRef, and Unpaywall.
 

@@ -1,0 +1,58 @@
+# ScholarPeer default configuration.
+# Values here are overridden by environment variables with the SP_ prefix.
+
+corpus:
+  corpus_dir: F:/TREE_OF_THOUGHT/PHD/papers/literature_review
+  pdf_dir: F:/TREE_OF_THOUGHT/PHD/papers/new_pdf
+  supported_extensions: [".pdf", ".md"]
+
+services:
+  qdrant_url: http://localhost:6333
+  grobid_url: http://localhost:8070
+  openalex_base: https://api.openalex.org
+  s2_base: https://api.semanticscholar.org/graph/v1
+  unpaywall_base: https://api.unpaywall.org/v2
+
+models:
+  dense_model: BAAI/bge-m3
+  dense_dim: 1024
+  rerank_model: BAAI/bge-reranker-v2-m3
+  colpali_model: vidore/colqwen2.5-v0.2
+  device: cuda
+  leader_model: claude-opus-4-7
+  specialist_model: claude-sonnet-4-6
+  formatter_model: claude-haiku-4-5
+
+collections:
+  dense: sp_dense
+  sparse: sp_sparse
+  colpali: sp_colpali
+
+retrieval:
+  top_k_dense: 30
+  top_k_sparse: 30
+  top_k_rerank: 10
+  top_k_visual: 10
+  fusion_method: rrf          # rrf | weighted_sum
+  rrf_k: 60
+  min_rerank_score: 0.1
+
+chunking:
+  tokens: 512
+  overlap: 64
+  split_on: [section, paragraph]
+
+agents:
+  max_turns_leader: 12
+  max_turns_specialist: 6
+  parallel_specialists: true
+  self_feedback_rounds: 2
+
+safety:
+  require_grounding: true
+  reject_ungrounded_citations: true
+  max_hallucination_tolerance: 0.0
+
+logging:
+  level: INFO
+  format: console
